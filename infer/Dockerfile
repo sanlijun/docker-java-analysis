@@ -1,21 +1,20 @@
 # Base image
 FROM buildpack-deps:xenial-curl
-ENV INFER_VERSION=v0.10.0
-
-MAINTAINER Infer
+ENV INFER_VERSION=v0.11.0
+ENV OCAML_VERSION=4.04.0
 
 # Debian config
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
             aspcud \
             autoconf \
+            automake \
             gcc \
             g++ \
             git \
             groff-base \
             gradle \
             libc6-dev \
-            libffi-dev \
             libgmp-dev \
             libmpc-dev \
             libmpfr-dev \
@@ -42,8 +41,9 @@ RUN cd /opt && \
     ln -s ${PWD}/infer-linux64-$INFER_VERSION /infer
 
 # Compile Infer
-RUN cd /infer && \
-    ./build-infer.sh && \
+RUN opam init --compiler=$OCAML_VERSION -j $(getconf _NPROCESSORS_ONLN || echo 1) --yes && \
+    cd /infer && \
+    ./build-infer.sh --opam-switch $OCAML_VERSION && \
     rm -rf /root/.opam
 
 # Install Infer
@@ -60,8 +60,18 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV ANDROID_HOME /opt/android-sdk-linux
-RUN mkdir -p /opt/android-sdk-linux/licenses
-RUN echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > ${ANDROID_HOME}/licenses/android-sdk-license
+WORKDIR $ANDROID_HOME
+RUN curl -o sdk-tools-linux.zip \
+      https://dl.google.com/android/repository/sdk-tools-linux-3859397.zip && \
+    unzip sdk-tools-linux.zip && \
+    rm sdk-tools-linux.zip
+ENV PATH ${ANDROID_HOME}/tools/bin:${PATH}
 RUN echo "sdk.dir=${ANDROID_HOME}" > /infer/examples/android_hello/local.properties
 
-WORKDIR /usr/workdir/src
+# for whalebrew
+LABEL io.whalebrew.name 'infer'
+
+WORKDIR /workdir
+
+ENTRYPOINT ["infer"]
+CMD ["-h"]

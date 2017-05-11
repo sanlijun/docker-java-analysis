@@ -9,6 +9,9 @@ Docker-JAVA-Analysis is a JAVA Static Code Analysis Tool.
 - [FindBugs](http://findbugs.sourceforge.net/)
 - [Infer](https://github.com/facebook/infer)
 
+## Install dependency tools
+- [whalebrew](https://github.com/bfirsh/whalebrew)
+
 ## Getting Started
 
 ```bash
@@ -21,31 +24,56 @@ $ cp -r {your project} src/
 ### Checkstyle
 
 ```bash
+For dokcer
+
 # Building
 $ docker build -t checkstyletool ./checkstyle
 
 # Analyzing
-$ docker run --rm --volume `pwd`/src:/usr/workdir/src checkstyletool /bin/ash -c 'java -jar ../checkstyle.jar -c /google_checks.xml -o _report/checkstyle.log ./{your project src}'
+$ docker run -it -v "$(pwd)":/workdir checkstyletool -c /google_checks.xml -o ./src/_report/checkstyle.log ./src/{your project src}
 
 
 # Debugging
-docker run --rm -it -v `pwd`/src:/usr/workdir/src checkstyletool /bin/ash
+$ docker run --rm -v "$(pwd)":/workdir -it --entrypoint=ash checkstyletool
 ```
 
+```bash
+For whalebrew
+
+# install(local docker image)
+$ docker build -t checkstyletool ./checkstyle
+$ whalebrew install checkstyletool
+
+# Analyzing
+$ checkstyle -c /google_checks.xml -o ./src/_report/checkstyle.log ./src/{your project src}
+```
 * Open Your Editor `src/_report/checkstyle.log`
 
 ### PMD
 
 ```bash
+For dokcer
+
 # Building
 $ docker build -t pmdtool ./pmd
 
 # Analyzing
-$ docker run --rm --volume `pwd`/src:/usr/workdir/src pmdtool /bin/ash -c '../pmd-bin/bin/run.sh pmd -d ./{your project src} -f text -R java-basic,java-design > _report/pmd.log'
+$ docker run -it -v "$(pwd)":/workdir pmdtool -d ./src/{your project src} -f text -R java-basic,java-design > ./src/_report/pmd.log
 
 
 # Debugging
-docker run --rm -it -v `pwd`/src:/usr/workdir/src pmdtool /bin/ash
+$ docker run --rm -v "$(pwd)":/workdir -it --entrypoint=ash pmdtool
+```
+
+```bash
+For whalebrew
+
+## install(local docker image)
+$ docker build -t pmdtool ./pmd
+$ whalebrew install pmdtool
+
+## Analyzing
+$ pmd -d ./src/{your project src} -f text -R java-basic,java-design > ./src/_report/pmd.log
 ```
 
 * Open Your Editor `src/_report/pmd.log`
@@ -55,17 +83,28 @@ docker run --rm -it -v `pwd`/src:/usr/workdir/src pmdtool /bin/ash
 ### FindBugs
 
 ```bash
+For dokcer
+
 # Building
 $ docker build -t findbugstool ./findbugs
 
 # Analyzing
-$ docker run --rm --volume `pwd`/src:/usr/workdir/src findbugstool /bin/ash -c 'find ./{your project} -name "*.class" -type f | xargs java -jar ../findbugs/lib/findbugs.jar -textui -effort:max -low -html > _report/findbugs-result.html'
-
+$ docker run -it -v "$(pwd)":/workdir findbugstool -textui -effort:max -low -html -output ./src/_report/findbugs-result.html ./src/{your project src}/classes
 
 # Debugging
-docker run --rm -it -v `pwd`/src:/usr/workdir/src findbugstool /bin/ash
+docker run --rm -v "$(pwd)":/workdir -it --entrypoint=ash findbugstool
 ```
 
+```bash
+For whalebrew
+
+# install(local docker image)
+$ docker build -t findbugstool ./findbugs
+$ whalebrew install findbugstool
+
+# Analyzing
+$ find ./src/{your project src}/ -name "*.class" -type f | findbugs  -textui -effort:max -low -html > ./src/_report/findbugs-result.html
+```
 * Open Your Browser `src/_report/findbugs-result.html`
 
 
@@ -73,19 +112,38 @@ docker run --rm -it -v `pwd`/src:/usr/workdir/src findbugstool /bin/ash
 ### Infer
 
 ```bash
+For dokcer
+
 # Building
 $ docker build -t infertool ./infer
 
 # Analyzing
 ## gradle
-$ docker run --rm --volume `pwd`/src:/usr/workdir/src infertool /bin/bash -c 'cd ./{your project};infer -o /usr/workdir/src/_report/infer-out -- gradle clean build'
+$ docker run -it -v "$(pwd)":/workdir -w /workdir/src/{your project} infertool -o ./src/_report/infer-out -- gradle clean build
      Or
 ## mvn
-$ docker run --rm --volume `pwd`/src:/usr/workdir/src infertool /bin/bash -c 'cd ./{your project};infer -o /usr/workdir/src/_report/infer-out -- mvn compile'
+$ docker run -it -v "$(pwd)":/workdir -w /workdir/src/{your project} infertool -o ./src/_report/infer-out -- mvn compile
 
 
-# Debugging
-docker run --rm -it -v `pwd`/src:/usr/workdir/src infertool /bin/bash
+## Debugging
+docker run --rm -v "$(pwd)":/workdir -it --entrypoint=bash infertool
+```
+
+```bash
+For whalebrew
+
+## install(local docker image)
+$ docker build -t infertool ./infer
+$ whalebrew install infertool
+
+## Analyzing
+## gradle
+$ cd ./src/{your project} 
+$ infer -o ../_report/infer-out -- gradle clean build
+     Or
+## mvn
+$ cd ./src/{your project} 
+$ infer -o ../_report/infer-out -- mvn compile
 ```
 
 * Open Your Editor `src/_report/infer-out/bugs.txt`

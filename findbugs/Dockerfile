@@ -11,6 +11,13 @@ RUN apk add --update \
 RUN curl -sL \
       https://sourceforge.net/projects/findbugs/files/findbugs/${FINDBUGS_VERSION}/findbugs-${FINDBUGS_VERSION}.tar.gz/download | \
     tar -xz  && \
-    mv findbugs-* findbugs 
+    mv findbugs-* /usr/bin/findbugs 
 
-WORKDIR /usr/workdir/src
+# for whalebrew
+LABEL io.whalebrew.name 'findbugs'
+
+WORKDIR /workdir
+
+ENTRYPOINT ["java","-jar","/usr/bin/findbugs/lib/findbugs.jar"]
+CMD ["-h"]
+
